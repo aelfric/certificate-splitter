@@ -6,6 +6,8 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.pdfbox.multipdf.PageExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -27,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Main {
-
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
         String sourceFile = args[0];
@@ -44,15 +46,18 @@ public class Main {
             String outputFile = descriptor.getOutputFile(filename);
             Path tempFile = Files.createTempFile("", outputFile);
 
-            //TODO add name length check back in
-            System.out.println("Splitting out " + descriptor);
+            if (outputFile.length() > 255) {
+                document.close();
+                throw new IllegalArgumentException("This filename will be too long [" + outputFile + "]...giving up");
+            }
+            log.info("Splitting out {}", descriptor);
             extractor.setStartPage(descriptor.startPage());
             extractor.setEndPage(descriptor.endPage());
             PDDocument extract = extractor.extract();
 
             extract.save(tempFile.toFile());
             extract.close();
-            System.out.println(tempFile);
+            log.info("Writing to {}", tempFile);
             files.add(
                 new SplitPdf(
                     tempFile,
@@ -60,7 +65,7 @@ public class Main {
                 )
             );
         }
-        System.out.println(files);
+        document.close();
 
         S3Client s3 = S3Client.builder()
             .credentialsProvider(DefaultCredentialsProvider.create())
@@ -75,7 +80,7 @@ public class Main {
                 .acl(ObjectCannedACL.PUBLIC_READ)
                 .build();
 
-            System.out.println("Uploading to S3");
+            log.info("Uploading {} to S3", file);
             s3.putObject(putObjectRequest, RequestBody.fromFile(file.tempFile()));
         }
 
