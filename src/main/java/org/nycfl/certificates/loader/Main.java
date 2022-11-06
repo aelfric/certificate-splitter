@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @Command(
@@ -58,34 +59,7 @@ public class Main implements Callable<Integer>{
         String filename = input.getName();
         List<SplitPdfDescriptor> splitDescriptors = getSplitDescriptors(tournamentId);
 
-        PDDocument document = PDDocument.load(input);
-        PageExtractor extractor = new PageExtractor(document);
-
-        List<SplitPdf> files = new LinkedList<>();
-        for (SplitPdfDescriptor descriptor : splitDescriptors) {
-            String outputFile = descriptor.getOutputFile(filename);
-            Path tempFile = Files.createTempFile("", outputFile);
-
-            if (outputFile.length() > 255) {
-                document.close();
-                throw new IllegalArgumentException("This filename will be too long [" + outputFile + "]...giving up");
-            }
-            log.info("Splitting out {}", descriptor);
-            extractor.setStartPage(descriptor.startPage());
-            extractor.setEndPage(descriptor.endPage());
-            PDDocument extract = extractor.extract();
-
-            extract.save(tempFile.toFile());
-            extract.close();
-            log.info("Writing to {}", tempFile);
-            files.add(
-                new SplitPdf(
-                    tempFile,
-                    outputFile
-                )
-            );
-        }
-        document.close();
+        List<SplitPdf> files = splitFiles(input, filename, splitDescriptors);
 
         S3Client s3 = S3Client.builder()
             .credentialsProvider(DefaultCredentialsProvider.create())
@@ -104,6 +78,55 @@ public class Main implements Callable<Integer>{
             s3.putObject(putObjectRequest, RequestBody.fromFile(file.tempFile()));
         }
         return 0;
+    }
+
+    private List<SplitPdf> splitFiles(File input, String filename, List<SplitPdfDescriptor> splitDescriptors)
+            throws IOException {
+        PDDocument document = PDDocument.load(input);
+        PageExtractor extractor = new PageExtractor(document);
+
+        List<Optional<SplitPdf>> files = new LinkedList<>();
+        splitDescriptors
+            .stream()
+            .map(descriptor -> splitFile(filename, document, extractor, descriptor))
+            .toList();
+        document.close();
+
+        if(files.stream().allMatch(Optional::isPresent)){
+            return files.stream().map(Optional::get).toList();    
+        } else {
+            throw new IllegalArgumentException("One or more files failed...giving up.");
+        }
+    }
+
+    private Optional<SplitPdf> splitFile(String filename, PDDocument document, PageExtractor extractor,
+            SplitPdfDescriptor descriptor) {
+        try {
+            String outputFile = descriptor.getOutputFile(filename);
+            Path tempFile = Files.createTempFile("", outputFile);
+
+            if (outputFile.length() > 255) {
+                document.close();
+                log.error("This filename will be too long [" + outputFile + "]...giving up");
+                return Optional.empty();
+            }
+            log.info("Splitting out {}", descriptor);
+            extractor.setStartPage(descriptor.startPage());
+            extractor.setEndPage(descriptor.endPage());
+            PDDocument extract = extractor.extract();
+
+            extract.save(tempFile.toFile());
+            extract.close();
+            log.info("Writing to {}", tempFile);
+            return Optional.of(
+                new SplitPdf(
+                    tempFile,
+                    outputFile)
+            );
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            return Optional.empty();
+        }
     }
 
     public static List<SplitPdfDescriptor> getSplitDescriptors(int tournamentId) throws IOException,
