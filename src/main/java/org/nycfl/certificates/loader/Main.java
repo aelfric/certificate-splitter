@@ -8,6 +8,10 @@ import org.apache.pdfbox.multipdf.PageExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -27,15 +31,31 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
-public class Main {
+@Command(
+  name = "split-certs",
+  description = "splits up a certificates PDF and uploads it to AWS",
+  version = "certificates-splitter 0.0.2",
+  mixinStandardHelpOptions = true
+)
+public class Main implements Callable<Integer>{
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
+    @Parameters(index = "0", description = "The file to split")
+    String sourceFile;
+
+    @Parameters(index = "1", description = "the tournament ID")
+    int tournamentId;
+
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
-        String sourceFile = args[0];
+        int exitCode = new CommandLine(new Main()).execute(args);
+        System.exit(exitCode);
+    }
+
+    public Integer call() throws Exception {
         File input = new File(sourceFile);
         String filename = input.getName();
-        int tournamentId = Integer.parseInt(args[1]);
         List<SplitPdfDescriptor> splitDescriptors = getSplitDescriptors(tournamentId);
 
         PDDocument document = PDDocument.load(input);
@@ -83,7 +103,7 @@ public class Main {
             log.info("Uploading {} to S3", file);
             s3.putObject(putObjectRequest, RequestBody.fromFile(file.tempFile()));
         }
-
+        return 0;
     }
 
     public static List<SplitPdfDescriptor> getSplitDescriptors(int tournamentId) throws IOException,

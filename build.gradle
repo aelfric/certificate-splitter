@@ -5,6 +5,7 @@
 plugins {
   id 'java'
   id 'maven-publish'
+  id 'application'
   id("com.github.johnrengelman.shadow") version "6.0.0"
 }
 
@@ -20,6 +21,8 @@ dependencies {
   implementation 'org.apache.pdfbox:pdfbox:2.0.27'
   implementation 'org.apache.commons:commons-csv:1.9.0'
   implementation 'org.slf4j:slf4j-simple:2.0.3'
+  implementation 'info.picocli:picocli:4.7.0'
+  annotationProcessor 'info.picocli:picocli-codegen:4.7.0'
 }
 
 group = 'com.frankriccobono'
@@ -35,14 +38,11 @@ publishing {
   }
 }
 
-tasks.withType(JavaCompile) {
+compileJava {
+  options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
   options.encoding = 'UTF-8'
 }
 
-jar {
-  manifest {
-    attributes(
-        'Main-Class': 'org.nycfl.certificates.loader.Main'
-        )
-  }
+run {
+  mainClassName = 'org.nycfl.certificates.loader.Main'
 }
