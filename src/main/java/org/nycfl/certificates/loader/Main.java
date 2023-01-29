@@ -8,7 +8,6 @@ import org.apache.pdfbox.multipdf.PageExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -29,18 +28,17 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @Command(
-  name = "split-certs",
-  description = "splits up a certificates PDF and uploads it to AWS",
-  version = "certificates-splitter 0.0.2",
-  mixinStandardHelpOptions = true
+    name = "split-certs",
+    description = "splits up a certificates PDF and uploads it to AWS",
+    version = "certificates-splitter 0.0.2",
+    mixinStandardHelpOptions = true
 )
-public class Main implements Callable<Integer>{
+public class Main implements Callable<Integer> {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     @Parameters(index = "0", description = "The file to split")
@@ -49,7 +47,7 @@ public class Main implements Callable<Integer>{
     @Parameters(index = "1", description = "the tournament ID")
     int tournamentId;
 
-    public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
+    public static void main(String[] args) {
         int exitCode = new CommandLine(new Main()).execute(args);
         System.exit(exitCode);
     }
@@ -61,53 +59,58 @@ public class Main implements Callable<Integer>{
 
         List<SplitPdf> files = splitFiles(input, filename, splitDescriptors);
 
-        S3Client s3 = S3Client.builder()
-            .credentialsProvider(DefaultCredentialsProvider.create())
-            .region(Region.US_EAST_1)
-            .build();
+        try (
+            S3Client s3 = S3Client.builder()
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .region(Region.US_EAST_1)
+                .build()
+        ) {
+            String bucket = "nycfl-certs";
+            for (SplitPdf file : files) {
+                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(file.targetFileName())
+                    .acl(ObjectCannedACL.PUBLIC_READ)
+                    .build();
 
-        String bucket = "nycfl-certs";
-        for (SplitPdf file : files) {
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(file.targetFileName())
-                .acl(ObjectCannedACL.PUBLIC_READ)
-                .build();
-
-            log.info("Uploading {} to S3", file);
-            s3.putObject(putObjectRequest, RequestBody.fromFile(file.tempFile()));
+                log.info("Uploading {} to S3", file);
+                s3.putObject(putObjectRequest, RequestBody.fromFile(file.tempFile()));
+            }
+            return 0;
         }
-        return 0;
     }
 
-    private List<SplitPdf> splitFiles(File input, String filename, List<SplitPdfDescriptor> splitDescriptors)
-            throws IOException {
+    private List<SplitPdf> splitFiles(File input,
+                                      String filename,
+                                      List<SplitPdfDescriptor> splitDescriptors)
+        throws IOException {
         PDDocument document = PDDocument.load(input);
         PageExtractor extractor = new PageExtractor(document);
 
-        List<Optional<SplitPdf>> files = new LinkedList<>();
-        splitDescriptors
+        List<Optional<SplitPdf>> files = splitDescriptors
             .stream()
             .map(descriptor -> splitFile(filename, document, extractor, descriptor))
             .toList();
         document.close();
 
-        if(files.stream().allMatch(Optional::isPresent)){
-            return files.stream().map(Optional::get).toList();    
+        if (files.stream().allMatch(Optional::isPresent)) {
+            return files.stream().map(Optional::get).toList();
         } else {
             throw new IllegalArgumentException("One or more files failed...giving up.");
         }
     }
 
-    private Optional<SplitPdf> splitFile(String filename, PDDocument document, PageExtractor extractor,
-            SplitPdfDescriptor descriptor) {
+    private Optional<SplitPdf> splitFile(String filename,
+                                         PDDocument document,
+                                         PageExtractor extractor,
+                                         SplitPdfDescriptor descriptor) {
         try {
             String outputFile = descriptor.getOutputFile(filename);
             Path tempFile = Files.createTempFile("", outputFile);
 
             if (outputFile.length() > 255) {
                 document.close();
-                log.error("This filename will be too long [" + outputFile + "]...giving up");
+                log.error("This filename will be too long [{}]...giving up", outputFile);
                 return Optional.empty();
             }
             log.info("Splitting out {}", descriptor);
