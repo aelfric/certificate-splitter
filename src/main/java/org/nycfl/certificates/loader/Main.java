@@ -33,10 +33,10 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @Command(
-    name = "split-certs",
-    description = "splits up a certificates PDF and uploads it to AWS",
-    version = "certificates-splitter 0.0.2",
-    mixinStandardHelpOptions = true
+        name = "split-certs",
+        description = "splits up a certificates PDF and uploads it to AWS",
+        version = "certificates-splitter 0.0.2",
+        mixinStandardHelpOptions = true
 )
 public class Main implements Callable<Integer> {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
@@ -59,50 +59,53 @@ public class Main implements Callable<Integer> {
 
         List<SplitPdf> files = splitFiles(input, filename, splitDescriptors);
 
-        try (
-            S3Client s3 = S3Client.builder()
+        try (S3Client s3 = S3Client.builder()
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .region(Region.US_EAST_1)
-                .build()
-        ) {
+                .build()) {
+
             String bucket = "nycfl-certs";
             for (SplitPdf file : files) {
                 PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(file.targetFileName())
-                    .acl(ObjectCannedACL.PUBLIC_READ)
-                    .build();
+                        .bucket(bucket)
+                        .key(file.targetFileName())
+                        .acl(ObjectCannedACL.PUBLIC_READ)
+                        .build();
 
                 log.info("Uploading {} to S3", file);
                 s3.putObject(putObjectRequest, RequestBody.fromFile(file.tempFile()));
             }
             return 0;
+        } catch (Exception e) {
+            log.error("Failed to upload to S3", e);
+            return -1;
         }
     }
 
     private List<SplitPdf> splitFiles(File input,
                                       String filename,
                                       List<SplitPdfDescriptor> splitDescriptors)
-        throws IOException {
+            throws IOException {
         PDDocument document = PDDocument.load(input);
         PageExtractor extractor = new PageExtractor(document);
 
         List<Optional<SplitPdf>> files = splitDescriptors
-            .stream()
-            .map(descriptor -> splitFile(filename, document, extractor, descriptor))
-            .toList();
+                .stream()
+                .map(descriptor -> splitFile(filename, document, extractor, descriptor))
+                .toList();
         document.close();
 
         if (files.stream().allMatch(Optional::isPresent)) {
-            return files.stream().map(Optional::get).toList();
+            return files
+                    .stream()
+                    .<SplitPdf>mapMulti(Optional::ifPresent)
+                    .toList();
         } else {
             throw new IllegalArgumentException("One or more files failed...giving up.");
         }
     }
 
-    private Optional<SplitPdf> splitFile(String filename,
-                                         PDDocument document,
-                                         PageExtractor extractor,
+    private Optional<SplitPdf> splitFile(String filename, PDDocument document, PageExtractor extractor,
                                          SplitPdfDescriptor descriptor) {
         try {
             String outputFile = descriptor.getOutputFile(filename);
@@ -122,9 +125,9 @@ public class Main implements Callable<Integer> {
             extract.close();
             log.info("Writing to {}", tempFile);
             return Optional.of(
-                new SplitPdf(
-                    tempFile,
-                    outputFile)
+                    new SplitPdf(
+                            tempFile,
+                            outputFile)
             );
         } catch (IOException e) {
             log.error(e.getMessage(), e);
@@ -133,37 +136,37 @@ public class Main implements Callable<Integer> {
     }
 
     public static List<SplitPdfDescriptor> getSplitDescriptors(int tournamentId) throws IOException,
-        URISyntaxException, InterruptedException {
+            URISyntaxException, InterruptedException {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest
-            .newBuilder()
-            .uri(
-                new URI(
-                    "https://forensics.frankriccobono.com/certs/tournaments/%d/certificates/index"
-                        .formatted(tournamentId)
+                .newBuilder()
+                .uri(
+                        new URI(
+                                "https://forensics.frankriccobono.com/certs/tournaments/%d/certificates/index"
+                                        .formatted(tournamentId)
+                        )
                 )
-            )
-            .build();
+                .build();
         HttpResponse<String> send = client.send(request,
-            HttpResponse.BodyHandlers.ofString());
+                HttpResponse.BodyHandlers.ofString());
 
         try (
-            CSVParser
-                records =
-                CSVParser.parse(send.body(),
-                    CSVFormat.DEFAULT
-                        .builder()
-                        .setHeader()
-                        .setSkipHeaderRecord(true)
-                        .build()
-                )
+                CSVParser
+                        records =
+                        CSVParser.parse(send.body(),
+                                CSVFormat.DEFAULT
+                                        .builder()
+                                        .setHeader()
+                                        .setSkipHeaderRecord(true)
+                                        .build()
+                        )
         ) {
             return records
-                .stream()
-                .map(Main::getSplitPdfDescriptor)
-                .toList();
+                    .stream()
+                    .map(Main::getSplitPdfDescriptor)
+                    .toList();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
             return Collections.emptyList();
         }
     }
@@ -174,9 +177,9 @@ public class Main implements Callable<Integer> {
         int endPage = Integer.parseInt(row.get("endPage"));
 
         return new SplitPdfDescriptor(
-            startPage,
-            endPage,
-            event
+                startPage,
+                endPage,
+                event
         );
     }
 

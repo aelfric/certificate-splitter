@@ -26,7 +26,7 @@ dependencies {
 }
 
 group = 'com.frankriccobono'
-version = '0.0.2-SNAPSHOT'
+version = '0.0.3-SNAPSHOT'
 description = 'certs-splitter'
 java.sourceCompatibility = JavaVersion.VERSION_17
 
