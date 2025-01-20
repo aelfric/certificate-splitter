@@ -4,6 +4,7 @@ package org.nycfl.certificates.loader;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PageExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
@@ -83,26 +84,27 @@ public class Main implements Callable<Integer> {
     }
 
     List<SplitPdf> splitFiles(File input,
-                                      String filename,
-                                      List<SplitPdfDescriptor> splitDescriptors)
+                              String filename,
+                              List<SplitPdfDescriptor> splitDescriptors)
             throws IOException {
-        PDDocument document = PDDocument.load(input);
-        PageExtractor extractor = new PageExtractor(document);
+        try (PDDocument document = Loader.loadPDF((input))) {
+            PageExtractor extractor = new PageExtractor(document);
 
-        List<Optional<SplitPdf>> files = splitDescriptors
-                .stream()
-                .map(descriptor -> splitFile(filename, document, extractor, descriptor))
-                .toList();
-        document.close();
-
-        if (files.stream().allMatch(Optional::isPresent)) {
-            return files
+            List<Optional<SplitPdf>> files = splitDescriptors
                     .stream()
-                    .<SplitPdf>mapMulti(Optional::ifPresent)
+                    .map(descriptor -> splitFile(filename, document, extractor, descriptor))
                     .toList();
-        } else {
-            throw new IllegalArgumentException("One or more files failed...giving up.");
+
+            if (files.stream().allMatch(Optional::isPresent)) {
+                return files
+                        .stream()
+                        .<SplitPdf>mapMulti(Optional::ifPresent)
+                        .toList();
+            } else {
+                throw new IllegalArgumentException("One or more files failed...giving up.");
+            }
         }
+
     }
 
     private Optional<SplitPdf> splitFile(String filename, PDDocument document, PageExtractor extractor,
