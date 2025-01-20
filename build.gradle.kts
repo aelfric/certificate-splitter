@@ -1,8 +1,7 @@
 plugins {
-    id("java")
-    id("maven-publish")
-    id("application")
-    id("com.github.johnrengelman.shadow") version "6.0.0"
+    java
+    application
+    alias(libs.plugins.shadowJar)
 }
 
 repositories {
@@ -13,12 +12,12 @@ repositories {
 }
 
 dependencies {
-    implementation("software.amazon.awssdk:s3:2.17.96")
-    implementation("org.apache.pdfbox:pdfbox:2.0.27")
-    implementation("org.apache.commons:commons-csv:1.9.0")
-    implementation("org.slf4j:slf4j-simple:2.0.3")
-    implementation("info.picocli:picocli:4.7.0")
-    annotationProcessor("info.picocli:picocli-codegen:4.7.0")
+    implementation(libs.aws.sdk)
+    implementation(libs.pdfbox)
+    implementation(libs.commons.csv)
+    implementation(libs.slf4j.simple)
+    implementation(libs.picocli)
+    annotationProcessor(libs.picocli.codegen)
 }
 
 group = "com.frankriccobono"
