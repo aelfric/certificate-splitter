@@ -158,7 +158,7 @@ public class Main implements Callable<Integer> {
                                         .builder()
                                         .setHeader()
                                         .setSkipHeaderRecord(true)
-                                        .build()
+                                        .get()
                         )
         ) {
             return records
