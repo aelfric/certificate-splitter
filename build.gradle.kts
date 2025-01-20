@@ -1,5 +1,6 @@
 plugins {
     java
+    jacoco
     application
     alias(libs.plugins.shadowJar)
 }
@@ -18,6 +19,10 @@ dependencies {
     implementation(libs.slf4j.simple)
     implementation(libs.picocli)
     annotationProcessor(libs.picocli.codegen)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.assertJ)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 group = "com.frankriccobono"
@@ -33,5 +38,14 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClassName = "org.nycfl.certificates.loader.Main"
+    mainClass.set("org.nycfl.certificates.loader.Main")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test) // tests are required to run before generating the report
 }

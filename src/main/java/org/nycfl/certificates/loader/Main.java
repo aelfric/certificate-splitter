@@ -82,7 +82,7 @@ public class Main implements Callable<Integer> {
         }
     }
 
-    private List<SplitPdf> splitFiles(File input,
+    List<SplitPdf> splitFiles(File input,
                                       String filename,
                                       List<SplitPdfDescriptor> splitDescriptors)
             throws IOException {
