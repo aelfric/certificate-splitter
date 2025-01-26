@@ -5,7 +5,7 @@ commonsCsvVersion = "1.13.0"
 junit = "5.11.4"
 pdfboxVersion = "3.0.4"
 picocliVersion = "4.7.6"
-shadowJarPlugin = "8.1.1"
+shadowJarPlugin = "8.3.0"
 slf4jVersion = "2.0.16"
 
 [libraries]
@@ -19,4 +19,4 @@ picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "pico
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4jVersion" }
 
 [plugins]
-shadowJar = { id = "com.github.johnrengelman.shadow", version.ref = "shadowJarPlugin" }
+shadowJar = { id = "com.gradleup.shadow", version.ref = "shadowJarPlugin" }
