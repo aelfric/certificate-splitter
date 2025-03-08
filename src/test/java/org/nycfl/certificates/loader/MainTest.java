@@ -32,7 +32,7 @@ class MainTest {
     }
 
     @Test
-    void canParseArguments(){
+    void canGetHelpString(){
         Main main = new Main();
         CommandLine cmd = new CommandLine(main);
         StringWriter sw = new StringWriter();
@@ -42,14 +42,26 @@ class MainTest {
         assertThat(execute).isZero();
         assertThat(sw).hasToString(
                 """
-                        Usage: split-certs [-hV] <sourceFile> <tournamentId>
+                        Usage: split-certs [-hV] <sourceFile> <tournamentId> [COMMAND]
                         splits up a certificates PDF and uploads it to AWS
                               <sourceFile>     The file to split
                               <tournamentId>   the tournament ID
                           -h, --help           Show this help message and exit.
                           -V, --version        Print version information and exit.
+                        Commands:
+                          generate-completion  Generate bash/zsh completion script for split-certs.
                         """
         );
+    }
+
+    @Test
+    void canParseArguments(){
+        Main main = new Main();
+        CommandLine cmd = new CommandLine(main);
+        StringWriter sw = new StringWriter();
+        cmd.setOut(new PrintWriter(sw));
+        cmd.parseArgs("./src/test/resources/test.pdf", "123");
+        assertThat(main.sourceFile).exists();
     }
 
 }

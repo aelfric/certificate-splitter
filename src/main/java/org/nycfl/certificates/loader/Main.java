@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
+import picocli.AutoComplete.GenerateCompletion;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -36,14 +37,15 @@ import java.util.concurrent.Callable;
 @Command(
         name = "split-certs",
         description = "splits up a certificates PDF and uploads it to AWS",
-        version = "certificates-splitter 0.0.2",
-        mixinStandardHelpOptions = true
+        version = "certificates-splitter 0.0.3",
+        mixinStandardHelpOptions = true,
+        subcommands = GenerateCompletion.class
 )
 public class Main implements Callable<Integer> {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     @Parameters(index = "0", description = "The file to split")
-    String sourceFile;
+    File sourceFile;
 
     @Parameters(index = "1", description = "the tournament ID")
     int tournamentId;
@@ -54,11 +56,10 @@ public class Main implements Callable<Integer> {
     }
 
     public Integer call() throws Exception {
-        File input = new File(sourceFile);
-        String filename = input.getName();
+        String filename = sourceFile.getName();
         List<SplitPdfDescriptor> splitDescriptors = getSplitDescriptors(tournamentId);
 
-        List<SplitPdf> files = splitFiles(input, filename, splitDescriptors);
+        List<SplitPdf> files = splitFiles(sourceFile, filename, splitDescriptors);
 
         try (S3Client s3 = S3Client.builder()
                 .credentialsProvider(DefaultCredentialsProvider.create())
