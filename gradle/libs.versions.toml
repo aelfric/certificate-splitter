@@ -6,7 +6,7 @@ junit = "5.12.0"
 pdfboxVersion = "3.0.4"
 picocliVersion = "4.7.6"
 shadowJarPlugin = "8.3.6"
-slf4jVersion = "2.0.16"
+slf4jVersion = "2.0.17"
 
 [libraries]
 assertJ = {module="org.assertj:assertj-core", version.ref="assertjVersion"}
