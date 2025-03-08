@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MainTest {
 
     @Test
-    void canGetDescriptors() throws IOException, URISyntaxException, InterruptedException {
+    void canGetDescriptors() throws IOException, URISyntaxException {
         List<SplitPdfDescriptor> splitDescriptors = Main.getSplitDescriptors(30300);
         assertThat(splitDescriptors).hasSize(10);
         assertThat(splitDescriptors.get(0).startPage()).isEqualTo(1);
