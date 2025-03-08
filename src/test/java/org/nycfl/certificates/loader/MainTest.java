@@ -18,7 +18,7 @@ class MainTest {
     void canGetDescriptors() throws IOException, URISyntaxException {
         List<SplitPdfDescriptor> splitDescriptors = Main.getSplitDescriptors(30300);
         assertThat(splitDescriptors).hasSize(10);
-        assertThat(splitDescriptors.get(0).startPage()).isEqualTo(1);
+        assertThat(splitDescriptors.getFirst().startPage()).isEqualTo(1);
     }
 
     @Test
@@ -28,7 +28,7 @@ class MainTest {
         Main main = new Main();
         List<SplitPdf> splitPdfs = main.splitFiles(file, "test.pdf", descriptors);
         assertThat(splitPdfs).hasSize(1);
-        assertThat(splitPdfs.get(0).tempFile()).exists();
+        assertThat(splitPdfs.getFirst().tempFile()).exists();
     }
 
     @Test
