@@ -9,10 +9,10 @@ import org.apache.pdfbox.multipdf.PageExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import picocli.AutoComplete.GenerateCompletion;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
-import picocli.AutoComplete.GenerateCompletion;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -22,11 +22,10 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -111,12 +110,12 @@ public class Main implements Callable<Integer> {
     private Optional<SplitPdf> splitFile(String filename, PDDocument document, PageExtractor extractor,
                                          SplitPdfDescriptor descriptor) {
         try {
-            String outputFile = descriptor.getOutputFile(filename);
-            Path tempFile = Files.createTempFile("", outputFile);
+            String outputFileName = descriptor.getOutputFile(filename);
+            Path outputFilePath = Files.createTempFile("", outputFileName);
 
-            if (outputFile.length() > 255) {
+            if (outputFileName.length() > 255) {
                 document.close();
-                log.error("This filename will be too long [{}]...giving up", outputFile);
+                log.error("This filename will be too long [{}]...giving up", outputFileName);
                 return Optional.empty();
             }
             log.info("Splitting out {}", descriptor);
@@ -124,13 +123,14 @@ public class Main implements Callable<Integer> {
             extractor.setEndPage(descriptor.endPage());
             PDDocument extract = extractor.extract();
 
-            extract.save(tempFile.toFile());
+            extract.save(outputFilePath.toFile());
             extract.close();
-            log.info("Writing to {}", tempFile);
+            log.info("Writing to {}", outputFilePath);
             return Optional.of(
                     new SplitPdf(
-                            tempFile,
-                            outputFile)
+                            outputFilePath,
+                            outputFileName
+                    )
             );
         } catch (IOException e) {
             log.error(e.getMessage(), e);
@@ -139,24 +139,19 @@ public class Main implements Callable<Integer> {
     }
 
     public static List<SplitPdfDescriptor> getSplitDescriptors(int tournamentId) throws IOException,
-            URISyntaxException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest
-                .newBuilder()
-                .uri(
-                        new URI(
-                                "https://forensics.frankriccobono.com/certs/tournaments/%d/certificates/index"
-                                        .formatted(tournamentId)
-                        )
-                )
-                .build();
-        HttpResponse<String> send = client.send(request,
-                HttpResponse.BodyHandlers.ofString());
+            URISyntaxException {
+        InputStream body = new URI(
+            "https://forensics.frankriccobono.com/certs/tournaments/%d/certificates/index"
+                .formatted(tournamentId)
+        )
+            .toURL()
+            .openStream();
 
         try (
                 CSVParser
                         records =
-                        CSVParser.parse(send.body(),
+                        CSVParser.parse(body,
+                                StandardCharsets.UTF_8,
                                 CSVFormat.DEFAULT
                                         .builder()
                                         .setHeader()
