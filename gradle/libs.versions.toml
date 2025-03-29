@@ -1,6 +1,6 @@
 [versions]
 assertjVersion = "3.27.3"
-awsVersion = "2.30.36"
+awsVersion = "2.31.11"
 commonsCsvVersion = "1.14.0"
 junit = "5.12.1"
 pdfboxVersion = "3.0.4"
