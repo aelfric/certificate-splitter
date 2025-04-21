@@ -4,7 +4,7 @@ awsVersion = "2.31.11"
 commonsCsvVersion = "1.14.0"
 junit = "5.12.1"
 pdfboxVersion = "3.0.4"
-picocliVersion = "4.7.6"
+picocliVersion = "4.7.7"
 shadowJarPlugin = "8.3.6"
 slf4jVersion = "2.0.17"
 
