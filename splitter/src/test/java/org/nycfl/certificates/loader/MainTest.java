@@ -1,6 +1,7 @@
 package org.nycfl.certificates.loader;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,12 +57,12 @@ class MainTest {
     }
 
     @Test
-    void canParseArguments(){
+    void canParseArguments(@TempDir Path tempDir){
         Main main = new Main();
         CommandLine cmd = new CommandLine(main);
         StringWriter sw = new StringWriter();
         cmd.setOut(new PrintWriter(sw));
-        cmd.parseArgs("./src/test/resources/test.pdf", "123");
+        cmd.parseArgs(tempDir.toAbsolutePath().toString(), "123");
         assertThat(main.sourceFile).exists();
     }
 

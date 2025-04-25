@@ -2,16 +2,18 @@ package build
 
 import mill._
 import mill.javalib._
-import mill.javalib.publish._
 
-object `package` extends RootModule with MavenModule {
+object splitter extends MavenModule {
 
   def artifactName = "certs-splitter"
 
-  def javacOptions = super.javacOptions() ++
-    Seq("-Xlint:all", "-Xlint:-processing", "-Werror")
+  def javacOptions: T[Seq[String]] = Seq(
+    "-Xlint:all",
+    "-Xlint:-processing",
+    "-Werror"
+  )
 
-  def mvnDeps = Seq(
+  def mvnDeps: T[Seq[Dep]] = Seq(
     mvn"info.picocli:picocli:4.7.7",
     mvn"org.apache.commons:commons-csv:1.14.0",
     mvn"org.apache.pdfbox:pdfbox:3.0.4",
@@ -23,7 +25,7 @@ object `package` extends RootModule with MavenModule {
 
   object test extends MavenTests with TestModule.Junit5 {
 
-    def mvnDeps = Seq(
+    def mvnDeps: T[Seq[Dep]] = Seq(
       mvn"org.assertj:assertj-core:3.27.3"
     )
   }
