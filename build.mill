@@ -16,7 +16,7 @@ object `package` extends RootModule with MavenModule {
     mvn"org.apache.commons:commons-csv:1.14.0",
     mvn"org.apache.pdfbox:pdfbox:3.0.4",
     mvn"org.slf4j:slf4j-simple:2.0.17",
-    mvn"software.amazon.awssdk:s3:2.31.11"
+    mvn"software.amazon.awssdk:s3:2.31.29"
   )
 
   def publishVersion = "0.0.3-SNAPSHOT"
