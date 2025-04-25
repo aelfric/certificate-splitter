@@ -1,0 +1,30 @@
+package build
+
+import mill._
+import mill.javalib._
+import mill.javalib.publish._
+
+object `package` extends RootModule with MavenModule {
+
+  def artifactName = "certs-splitter"
+
+  def javacOptions = super.javacOptions() ++
+    Seq("-Xlint:all", "-Xlint:-processing", "-Werror")
+
+  def mvnDeps = Seq(
+    mvn"info.picocli:picocli:4.7.7",
+    mvn"org.apache.commons:commons-csv:1.14.0",
+    mvn"org.apache.pdfbox:pdfbox:3.0.4",
+    mvn"org.slf4j:slf4j-simple:2.0.17",
+    mvn"software.amazon.awssdk:s3:2.31.11"
+  )
+
+  def publishVersion = "0.0.3-SNAPSHOT"
+
+  object test extends MavenTests with TestModule.Junit5 {
+
+    def mvnDeps = Seq(
+      mvn"org.assertj:assertj-core:3.27.3"
+    )
+  }
+}
