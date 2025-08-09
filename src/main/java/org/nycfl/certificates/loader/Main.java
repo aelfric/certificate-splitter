@@ -61,7 +61,7 @@ public class Main implements Callable<Integer> {
         List<SplitPdf> files = splitFiles(sourceFile, filename, splitDescriptors);
 
         try (S3Client s3 = S3Client.builder()
-                .credentialsProvider(DefaultCredentialsProvider.create())
+                .credentialsProvider(DefaultCredentialsProvider.builder().build())
                 .region(Region.US_EAST_1)
                 .build()) {
 
