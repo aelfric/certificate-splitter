@@ -4,10 +4,8 @@ import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URISyntaxException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,14 +13,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MainTest {
 
     @Test
-    void canGetDescriptors() throws IOException, URISyntaxException {
+    void canGetDescriptors() throws Exception {
         List<SplitPdfDescriptor> splitDescriptors = Main.getSplitDescriptors(30300);
         assertThat(splitDescriptors).hasSize(10);
-        assertThat(splitDescriptors.getFirst().startPage()).isEqualTo(1);
+        assertThat(splitDescriptors.getFirst().startPage()).isOne();
     }
 
     @Test
-    void testSplitFiles() throws URISyntaxException, IOException {
+    void splitFiles() throws Exception {
         List<SplitPdfDescriptor> descriptors = List.of(new SplitPdfDescriptor(1, 5, "POI"));
         File file = new File(ClassLoader.getSystemResource("test.pdf").toURI());
         Main main = new Main();
