@@ -35,3 +35,5 @@ gradle-app.setting
 /bin/
 .settings/
 .factorypath
+out/
+.bsp/
