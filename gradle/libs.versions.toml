@@ -1,5 +1,5 @@
 [versions]
-assertjVersion = "3.27.4"
+assertjVersion = "3.27.6"
 awsVersion = "2.34.0"
 commonsCsvVersion = "1.14.1"
 junit = "5.13.4"
