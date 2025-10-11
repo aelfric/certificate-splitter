@@ -49,7 +49,7 @@ public class Main implements Callable<Integer> {
     @Parameters(index = "1", description = "the tournament ID")
     int tournamentId;
 
-    public static void main(String[] args) {
+    void main(String[] args) {
         int exitCode = new CommandLine(new Main()).execute(args);
         System.exit(exitCode);
     }
