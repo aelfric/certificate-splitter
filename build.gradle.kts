@@ -25,7 +25,7 @@ dependencies {
 group = "com.frankriccobono"
 version = "0.0.3-SNAPSHOT"
 description = "certs-splitter"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_25
 
 tasks.withType<JavaCompile> {
     options.compilerArgs.add("-Xlint:all")
@@ -40,7 +40,7 @@ application {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
