@@ -5,7 +5,7 @@ commonsCsvVersion = "1.14.1"
 junit = "6.0.3"
 pdfboxVersion = "3.0.7"
 picocliVersion = "4.7.7"
-shadowJarPlugin = "9.4.0"
+shadowJarPlugin = "9.4.1"
 slf4jVersion = "2.0.17"
 
 [libraries]
