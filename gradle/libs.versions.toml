@@ -2,7 +2,7 @@
 assertjVersion = "3.27.7"
 awsVersion = "2.50.2"
 commonsCsvVersion = "1.14.1"
-junit = "6.1.2"
+junit = "6.1.3"
 pdfboxVersion = "3.0.8"
 picocliVersion = "4.7.7"
 shadowJarPlugin = "9.6.1"
