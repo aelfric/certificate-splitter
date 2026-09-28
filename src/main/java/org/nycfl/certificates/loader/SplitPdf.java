@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 public record SplitPdf(
     Path tempFile,
-    String targetFileName
+    String targetFileName,
+    String s3ObjectKey
 ) {
 }

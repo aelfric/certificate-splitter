@@ -21,11 +21,14 @@ class MainTest {
 
     @Test
     void splitFiles() throws Exception {
-        List<SplitPdfDescriptor> descriptors = List.of(new SplitPdfDescriptor(1, 5, "POI"));
+        List<SplitPdfDescriptor> descriptors = List.of(new SplitPdfDescriptor(1, 5, "POI", 1 ));
         File file = new File(ClassLoader.getSystemResource("test.pdf").toURI());
         Main main = new Main();
         List<SplitPdf> splitPdfs = main.splitFiles(file, "test.pdf", descriptors);
-        assertThat(splitPdfs).hasSize(1);
+        assertThat(splitPdfs)
+            .hasSize(1)
+            .extracting(SplitPdf::s3ObjectKey)
+            .contains("tournaments/1/POI.pdf");
         assertThat(splitPdfs.getFirst().tempFile()).exists();
     }
 
