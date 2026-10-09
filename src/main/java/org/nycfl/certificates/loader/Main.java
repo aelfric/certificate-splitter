@@ -69,7 +69,7 @@ public class Main implements Callable<Integer> {
             for (SplitPdf file : files) {
                 PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                         .bucket(bucket)
-                        .key(file.targetFileName())
+                        .key(file.s3ObjectKey())
                         .acl(ObjectCannedACL.PUBLIC_READ)
                         .build();
 
@@ -129,7 +129,8 @@ public class Main implements Callable<Integer> {
             return Optional.of(
                     new SplitPdf(
                             outputFilePath,
-                            outputFileName
+                            outputFileName,
+                            descriptor.getS3ObjectKey()
                     )
             );
         } catch (IOException e) {
@@ -161,7 +162,7 @@ public class Main implements Callable<Integer> {
         ) {
             return records
                     .stream()
-                    .map(Main::getSplitPdfDescriptor)
+                    .map(row -> getSplitPdfDescriptor(row, tournamentId))
                     .toList();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
@@ -169,7 +170,7 @@ public class Main implements Callable<Integer> {
         }
     }
 
-    private static SplitPdfDescriptor getSplitPdfDescriptor(CSVRecord row) {
+    private static SplitPdfDescriptor getSplitPdfDescriptor(CSVRecord row, int tournamentId) {
         String event = row.get("event");
         int startPage = Integer.parseInt(row.get("startPage"));
         int endPage = Integer.parseInt(row.get("endPage"));
@@ -177,7 +178,8 @@ public class Main implements Callable<Integer> {
         return new SplitPdfDescriptor(
                 startPage,
                 endPage,
-                event
+                event,
+            tournamentId
         );
     }
 
